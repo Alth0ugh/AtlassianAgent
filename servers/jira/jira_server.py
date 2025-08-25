@@ -18,7 +18,6 @@ mcp = FastMCP(
     name="JiraServer"
 )
 
-
 @mcp.tool(description="Creates a ticket in Jira. Returns a response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.")
 def create_ticket(ctx: Context, summary: str, description: str, project: str) -> dict:
     request = CreateRequest(project, summary, description)
@@ -36,21 +35,6 @@ def create_ticket(ctx: Context, summary: str, description: str, project: str) ->
         return asdict(Response(True, "User does not have permissions for this operaiton."))
     elif response.status_code == 422:
         return asdict(Response(True, "Configuration problem prevents execution of this operation."))
-    
-
-@mcp.tool(description="Deletes a ticket in Jira.")
-def delete_ticket(ctx: Context, id: str):
-    pass
-
-@mcp.tool(description="Registers credentials.")
-def register_credential(ctx: Context, email: str, token: str):
-    ctx.client_id = email
-    print("A")
 
 if __name__ == "__main__":
-    # mcp.settings.host = args.host
-    # mcp.settings.port = args.port
-
-    # credentials = base64.b64encode(bytes(f"{args.mail}:{args.token}", "utf-8")).decode("utf-8")
-
     mcp.run(transport="sse")
