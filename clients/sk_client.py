@@ -20,7 +20,7 @@ async def main():
     # Step 1: Initialize the kernel
     kernel = sk.Kernel()
 
-    chat_service = OllamaChatCompletion("ollama", host="http://localhost:11434", ai_model_id="mistral")
+    chat_service = OllamaChatCompletion("ollama", host="http://localhost:11434", ai_model_id="MFDoom/deepseek-r1-tool-calling:8b")
 
     # Step 3: Register the service with the kernel
     kernel.add_service(chat_service)
@@ -32,7 +32,7 @@ async def main():
         execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
         chat = ChatHistory()
         service = kernel.get_service("ollama")
-        chat.add_system_message("You are a helpful AI assistant that helps people with their requests. You can also call a plugin for manipulating with Jira tickets. If there is a registration tool, ignore it. If the user does not supply you with all the arguments, ask for this information before using the plugin. If the operation fails, print the error message from the response.")
+        chat.add_system_message("You are a helpful AI assistant that helps people with their requests. You can also call a plugin for manipulating with Jira tickets. For calling these plugins, you do not need login information. If the user does not supply you with all the arguments, ask for this information before using the plugin. If the operation fails, print the error message from the response.")
 
         while True:
             print("Prompt:")
