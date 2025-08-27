@@ -12,14 +12,12 @@ parser.add_argument("--port", type=int, help="Port on which the server will be r
 parser.add_argument("--space", type=str, help="Name of the Atlassian space.", required=True)
 args = parser.parse_args()
 
-credentials = ""
-
 mcp = FastMCP(
     name="JiraServer"
 )
 
 def get_credentials(ctx: Context) -> str | None:
-    return ctx.request_context.request.headers.get("authorization")
+    return ctx.request_context.request.headers.get("authorization") # type: ignore
 
 @mcp.tool(description="Creates a ticket in Jira. Returns a response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.")
 def create_ticket(ctx: Context, summary: str, description: str, project: str) -> str:
@@ -43,12 +41,13 @@ def create_ticket(ctx: Context, summary: str, description: str, project: str) ->
         return json.dumps(Response(True, "User does not have permissions for this operaiton."))
     elif response.status_code == 422:
         return json.dumps(Response(True, "Configuration problem prevents execution of this operation."))
+    return json.dumps(Response(True, "No valid credentials were found in the request."))
     
 @mcp.tool(description="Lists all tickets assigned to the current user. This tools does not need any parameters. Returns a list of issues with key, summary and description of each issue. If error occurs, returns json with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error.")
 def load_tickets(ctx: Context) -> str:
     credentials = get_credentials(ctx)
     if credentials is None:
-        return json.dumps(Response("True", "No valid credentials were found in the request."))
+        return json.dumps(Response(True, "No valid credentials were found in the request."))
 
     headers = {"Authorization": f"Basic {credentials}",
            "Accept": "application/json",
