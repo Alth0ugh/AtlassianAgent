@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 import json
 
 @dataclass(init=True)
@@ -6,9 +7,10 @@ class CreateRequest:
     project: str
     summary: str
     description: str
+    assignee: str | None
 
     def to_json(self) -> str:
-        return json.dumps({ "fields": {
+        data = { "fields": {
             "project": {
                 "key": self.project
             },
@@ -28,7 +30,12 @@ class CreateRequest:
                     }
                 ]
             },
+            "assignee": {},
             "issuetype": {
                 "name": "Task"
             }
-        } }, indent=4)
+        } }
+        if self.assignee is not None:
+            data["fields"]["assignee"] = {"id": self.assignee}
+
+        return json.dumps(data, indent=4)
