@@ -207,5 +207,4 @@ def load_tickets_for_project(project_key: str) -> str:
     return json.dumps(results)
 
 if __name__ == "__main__":
-    load_tickets_for_project("KAN")
     mcp.run(transport="stdio")
