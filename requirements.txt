@@ -1,3 +1,4 @@
 mcp
+ollama
 requests
 semantic-kernel
