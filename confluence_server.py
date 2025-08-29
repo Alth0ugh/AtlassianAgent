@@ -6,7 +6,7 @@ import json
 from mcp.server.fastmcp import FastMCP
 import requests
 
-from server_functions import *
+from servers.server_functions import *
 from server_response import Response
 
 parser = ArgumentParser()
