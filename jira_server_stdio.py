@@ -7,7 +7,7 @@ from mcp.server.fastmcp import FastMCP
 import requests
 
 from jira_create_request import CreateRequest
-from servers.server_functions import *
+from server_functions import *
 from server_response import Response
 
 parser = ArgumentParser()

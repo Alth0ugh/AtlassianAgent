@@ -7,7 +7,7 @@ from semantic_kernel.connectors.ai.ollama import OllamaChatCompletion, OllamaCha
 from semantic_kernel.connectors.mcp import MCPSsePlugin
 from semantic_kernel.contents.chat_history import ChatHistory
 
-from servers.server_functions import convert_credentials
+from server_functions import convert_credentials
 
 parser = ArgumentParser()
 parser.add_argument("--ollama-address", type=str, help="Address and port for Ollama server.", required=True)
