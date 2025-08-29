@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 import asyncio
+import base64
 
 import semantic_kernel as sk
 from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
@@ -7,13 +8,27 @@ from semantic_kernel.connectors.ai.ollama import OllamaChatCompletion, OllamaCha
 from semantic_kernel.connectors.mcp import MCPSsePlugin
 from semantic_kernel.contents.chat_history import ChatHistory
 
-from server_functions import convert_credentials
-
 parser = ArgumentParser()
 parser.add_argument("--ollama-address", type=str, help="Address and port for Ollama server.", required=True)
 parser.add_argument("--mcp-address", type=str, help="Address and port of MCP server.", required=True)
 parser.add_argument("--mail", type=str, help="User email", required=True)
 parser.add_argument("--token", type=str, help="Atlassian ID token", required=True)
+
+def convert_credentials(mail: str, token: str) -> str:
+    """
+    Converts credentials into base64.
+    
+    Parameters:
+        mail (str): User email.
+        token (str): Atlassian ID token.
+
+    Returns:
+        str: Base64 encoded mail and token.
+    """
+    credentials = f"{mail}:{token}"
+    string_bytes = credentials.encode("utf-8")
+    base64_bytes = base64.b64encode(string_bytes)
+    return base64_bytes.decode("utf-8")
 
 async def main(args):
     kernel = sk.Kernel()
