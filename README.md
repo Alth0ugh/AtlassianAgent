@@ -60,18 +60,58 @@ In conclusion, [Claude Desktop](https://claude.ai/download) showed better abilit
 # How to run
 In order to run the agents, install [Ollama](https://ollama.com/) on your system and install a model of your choosing if you want to run agents from [Ollama](https://ollama.com/), otherwise install [Claude Desktop](https://claude.ai/download). Then, install [requirements.txt](requirements.txt) in your Python environment.
 
+## Generate Atlassian ID access token
+Visit [https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/](https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/) and generate access tokens using manual in section **Create an API token**. Save your token for future use.
+
 ## Running Ollama agents
 Run [jira_server.py](servers/jira_server.py) in the following way:
+
     python servers/jira_server.py --space {name_of_jira_space} --host {host_ip_address} --port {host_port}
 then, run [sk_client.py](clients/sk_client.py) the following way
+    
     python clients/sk_client.py --ollama-address {ollama_address:ollama_port} --mcp-address {mcp_address:mcp_port}/sse --mail {user@email.com} --token {atlassian_id_token} --model-id {ollama_model_id}
 
 The agent should connect to the server using SSE and a chat with the model opens.
 
 ## Running Claude Desktop
-Open Claude Desktop. Go to Settings > Developer settings > Edit config. Replace the config with the following:
+Open Claude Desktop. Go to Settings > Developer > Edit config. Replace the config with the following:
+
+    {
+    "mcpServers": {
+        "jira": {
+        "command": "python",
+        "args": [
+            "{path_to_repository}/jira_server_stdio.py",
+            "--space",
+            "{space}",
+            "--mail",
+            "{mail}",
+            "--token",
+            "{atlassian_id_token}"
+        ]
+        },
+        "confluence": {
+        "command": "python",
+        "args": [
+            "{path_to_repository}/confluence_server.py",
+            "--space",
+            "{space}",
+            "--mail",
+            "{mail}",
+            "--token",
+            "{atlassian_id_token}"
+        ]
+        }
+    }
+    }
 
 
-Modify the _confluence_server_path_ and _jira_server_path_ to point to [confluence_server_stdio.py](servers/confluence_server_stdio.py) and [jira_server_stdio.py](servers/jira_server_stdio.py) respectively. Then, restart the application. After start, [Claude Desktop](https://claude.ai/download) starts the servers on the background.
+Modify the parameters in curly braces according to you paths and login information. Then, restart the application. After start, [Claude Desktop](https://claude.ai/download) starts the servers on the background.
 
 ## Sample prompts
+* Create new Jira ticket for me.
+* Create new Confluence page for me.
+* Create Jira ticket with summary: " ... ", description: " ... ", project: " ... " and assign it to user with email " ... ".
+* List me all tickets from project " ... " where user " ... " is assigned.
+* Find me issue with key " ... " in project " ... " and copy this issue with summary " (new summary) "
+* Find me issue with key " ... " in project " ... " and create new Confluence page containing the description of the issue in the content and issue key in the title.
