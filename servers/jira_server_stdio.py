@@ -244,7 +244,6 @@ def load_tickets_for_project(project_key: str) -> str:
         description_obj = issue["fields"].get("description")
         description_text = ""
         if description_obj and "content" in description_obj:
-            # Extract plain text from nested description
             description_text = " ".join(
                 node["text"]
                 for block in description_obj["content"]
