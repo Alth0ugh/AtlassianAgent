@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-from typing import Optional
 import json
+from typing import Optional
 
 @dataclass(init=True)
 class CreateRequest:
     project: str
     summary: str
     description: str
-    assignee: str | None
+    assignee: Optional[str]
 
     def to_json(self) -> str:
         data = { "fields": {

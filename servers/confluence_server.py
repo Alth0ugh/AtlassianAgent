@@ -1,12 +1,13 @@
+from argparse import ArgumentParser
+from dataclasses import asdict
+from typing import Optional
+import json
+
 from mcp.server.fastmcp import FastMCP
 import requests
-import base64
-from argparse import ArgumentParser
-import json
-from dataclasses import asdict
-from server_response import Response
+
 from server_functions import *
-from typing import Optional
+from server_response import Response
 
 parser = ArgumentParser()
 parser.add_argument("--space", type=str, help="Name of the Atlassian space.", required=True)

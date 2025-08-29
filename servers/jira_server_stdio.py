@@ -1,20 +1,19 @@
-from mcp.server.fastmcp import FastMCP
-import requests
-import base64
 from argparse import ArgumentParser
-from jira_create_request import CreateRequest
-from server_response import Response
-import json
 from dataclasses import asdict
 from typing import Optional
+import json
+
+from mcp.server.fastmcp import FastMCP
+import requests
+
+from jira_create_request import CreateRequest
 from server_functions import *
+from server_response import Response
 
 parser = ArgumentParser()
-parser.add_argument("--host", type=str, help="IP address of the server", default="0.0.0.0")
-parser.add_argument("--port", type=int, help="Port on which the server will be running.", default=8050)
 parser.add_argument("--space", type=str, help="Name of the Atlassian space.", required=True)
-parser.add_argument("--mail", type=str, help="Name of the Atlassian space.", required=True)
-parser.add_argument("--token", type=str, help="Name of the Atlassian space.", required=True)
+parser.add_argument("--mail", type=str, help="User email.", required=True)
+parser.add_argument("--token", type=str, help="User Atlassian ID token.", required=True)
 args = parser.parse_args()
 
 mcp = FastMCP(

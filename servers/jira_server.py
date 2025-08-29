@@ -2,9 +2,10 @@ from argparse import ArgumentParser
 from dataclasses import asdict
 import json
 
-from jira_create_request import CreateRequest
 from mcp.server.fastmcp import Context, FastMCP
 import requests
+
+from jira_create_request import CreateRequest
 from server_functions import *
 from server_response import Response
 
