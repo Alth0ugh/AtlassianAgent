@@ -1,9 +1,10 @@
 import base64
 
+
 def convert_credentials(mail: str, token: str) -> str:
     """
     Converts credentials into base64.
-    
+
     Parameters:
         mail (str): User email.
         token (str): Atlassian ID token.
@@ -16,6 +17,7 @@ def convert_credentials(mail: str, token: str) -> str:
     base64_bytes = base64.b64encode(string_bytes)
     return base64_bytes.decode("utf-8")
 
+
 def get_headers(credentials: str) -> dict[str, str]:
     """
     Creates dictionary with HTTP headers.
@@ -27,5 +29,5 @@ def get_headers(credentials: str) -> dict[str, str]:
         Dict: dictionary containing HTTP headers.
     """
     return {"Authorization": f"Basic {credentials}",
-        "Accept": "application/json",
-        "Content-Type": "application/json"}
+            "Accept": "application/json",
+            "Content-Type": "application/json"}

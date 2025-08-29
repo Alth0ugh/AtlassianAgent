@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import json
 from typing import Optional
 
+
 @dataclass(init=True)
 class CreateRequest:
     project: str
@@ -10,7 +11,7 @@ class CreateRequest:
     assignee: Optional[str]
 
     def to_json(self) -> str:
-        data = { "fields": {
+        data = {"fields": {
             "project": {
                 "key": self.project
             },
@@ -34,7 +35,7 @@ class CreateRequest:
             "issuetype": {
                 "name": "Task"
             }
-        } }
+        }}
         if self.assignee is not None:
             data["fields"]["assignee"] = {"id": self.assignee}
 
