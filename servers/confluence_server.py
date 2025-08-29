@@ -5,6 +5,8 @@ from argparse import ArgumentParser
 import json
 from dataclasses import asdict
 from server_response import Response
+from server_functions import *
+from typing import Optional
 
 parser = ArgumentParser()
 parser.add_argument("--space", type=str, help="Name of the Atlassian space.", required=True)
@@ -16,18 +18,16 @@ mcp = FastMCP(
     name="ConfluenceServer"
 )
 
-def convert_credentials(mail: str, token: str) -> str:
-    credentials = f"{mail}:{token}"
-    string_bytes = credentials.encode("utf-8")
-    base64_bytes = base64.b64encode(string_bytes)
-    return base64_bytes.decode("utf-8")
+def get_space_id(name: str) -> Optional[str]:
+    """
+    Retrieves the ID of the space by the space name.
 
-def get_headers(credentials: str) -> dict:
-        return {"Authorization": f"Basic {credentials}",
-        "Accept": "application/json",
-        "Content-Type": "application/json"}
+    Parameters:
+        name (str): Name of the space.
 
-def get_space_id(name: str) -> list | None:
+    Returns:
+        Optional[str]: ID of the space or None.
+    """
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
 
@@ -53,7 +53,18 @@ def get_space_id(name: str) -> list | None:
 
           Returns:
            A response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.""")
-def create_page(space: str, title: str, content: str):
+def create_page(space: str, title: str, content: str) -> str:
+    """
+    Creates new Confluence page.
+
+    Parameters:
+        space (str): Space where the page is located.
+        title (str): The title of the page.
+        content (str): Text content of the page.
+
+    Returns:
+        str: JSON encoded Response object.
+    """
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
 
@@ -86,7 +97,17 @@ def create_page(space: str, title: str, content: str):
           Returns:
           A list of page titles and contents.
           In case an error accurs, a response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.""")
-def search_page(space: str, title: str):
+def search_page(space: str, title: str) -> str:
+    """
+    Searches for a page by its title in a given space.
+
+    Parameters:
+        space (str): The space for search.
+        title (str): The title of the page.
+
+    Returns:
+        str: JSON containing list of pages or in case of error seralized Response object.
+    """
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
 
