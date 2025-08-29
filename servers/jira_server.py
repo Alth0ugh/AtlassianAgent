@@ -1,10 +1,12 @@
-from mcp.server.fastmcp import FastMCP, Context
-import requests
-import base64
 from argparse import ArgumentParser
-from jira_create_request import CreateRequest
-from server_response import Response
+from dataclasses import asdict
 import json
+
+from jira_create_request import CreateRequest
+from mcp.server.fastmcp import Context, FastMCP
+import requests
+from server_functions import *
+from server_response import Response
 
 parser = ArgumentParser()
 parser.add_argument("--host", type=str, help="IP address of the server", default="0.0.0.0")
@@ -20,15 +22,38 @@ def get_credentials(ctx: Context) -> str | None:
     return ctx.request_context.request.headers.get("authorization") # type: ignore
 
 @mcp.tool(description="Creates a ticket in Jira. Returns a response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.")
-def create_ticket(ctx: Context, summary: str, description: str, project: str) -> str:
+def create_ticket(ctx: Context, summary: str, description: str, project: str, assignee: str) -> str:
+    """
+    Creates Jira ticket.
+
+    Parameters:
+        ctx (Context): Injected parameter.
+        summary (str): Ticket summary.
+        description (str): Description of the ticket.
+        project (str): Project where the ticket will be assigned.
+        assignee (Optional[str]): Assignee's email.
+
+    Returns:
+        str: JSON encoded Response object.
+    """
     credentials = get_credentials(ctx)
     if credentials is None:
         return json.dumps(Response(True, "No valid credentials were found in the request."))
+    headers = get_headers(credentials)
     
-    request = CreateRequest(project, summary, description)
-    headers = {"Authorization": f"Basic {credentials}",
-           "Accept": "application/json",
-           "Content-Type": "application/json"}
+    assignee_id = None
+
+    if assignee is not None:
+        parameters = {
+            "query": f"{assignee}"
+        }
+        response = requests.get(f"https://{args.space}.atlassian.net/rest/api/3/user/search", headers=headers, params=parameters)
+
+        if response.status_code == 200:
+            response = response.json()
+            assignee_id = response[0]["accountId"]
+    
+    request = CreateRequest(project, summary, description, assignee_id)
     response = requests.post(f"https://{args.space}.atlassian.net/rest/api/3/issue", data=request.to_json(), headers=headers)
 
     if response.status_code == 201:
@@ -44,30 +69,30 @@ def create_ticket(ctx: Context, summary: str, description: str, project: str) ->
     return json.dumps(Response(True, "No valid credentials were found in the request."))
     
 @mcp.tool(description="Lists all tickets assigned to the current user. This tools does not need any parameters. Returns a list of issues with key, summary and description of each issue. If error occurs, returns json with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error.")
-def load_tickets(ctx: Context) -> str:
+def load_tickets_for_project(ctx: Context, project_key: str) -> str:
+    """
+    Loads tickets assigned to the project.
+
+    Parameters:
+        ctx (Context): Injected parameter
+        project_key (str): Key of the project.
+
+    Returns:
+        str: JSON array with tickets or in case of an error encoded Response object.
+    """
     credentials = get_credentials(ctx)
     if credentials is None:
         return json.dumps(Response(True, "No valid credentials were found in the request."))
-
-    headers = {"Authorization": f"Basic {credentials}",
-           "Accept": "application/json",
-           "Content-Type": "application/json"}
-    response = requests.get("https://agenticspace.atlassian.net/rest/api/3/myself", headers=headers)
-    if response.status_code != 200:
-        return json.dumps(Response(True, "User not found."))
-    
-    response = response.json()
-    email = response["emailAddress"]
-
+    headers = get_headers(credentials)
     params = {
-        "jql": f'assignee = "{email}" ORDER BY created DESC',
-              "fields": "summary, description"
+        "jql": f'project = "{project_key}" ORDER BY created DESC',
+              "fields": "summary, description,assignee,status"
     }
 
-    response = requests.get("https://agenticspace.atlassian.net/rest/api/3/search/jql", params=params, headers=headers)
+    response = requests.get(f"https://{args.space}.atlassian.net/rest/api/3/search/jql", params=params, headers=headers)
 
     if response.status_code != 200:
-        return json.dumps(Response(True, "Issues could not be loaded."))
+        return json.dumps(asdict(Response(True, "Issues could not be loaded.")))
     
     results = []
     response = response.json()
@@ -75,6 +100,14 @@ def load_tickets(ctx: Context) -> str:
     for issue in issues:
         key = issue["key"]
         summary = issue["fields"]["summary"]
+        status = issue["fields"]["status"]["name"]
+        assignee = issue["fields"]["assignee"]
+        assignee_name = ""
+        assignee_email = ""
+
+        if assignee is not None:
+            assignee_name = issue["fields"]["assignee"].get("displayName", "")
+            assignee_email = issue["fields"]["assignee"].get("emailAddress", "")
 
         description_obj = issue["fields"].get("description")
         description_text = ""
@@ -86,7 +119,7 @@ def load_tickets(ctx: Context) -> str:
                 for node in block.get("content", [])
                 if node["type"] == "text"
             )
-        results.append({"key": key, "summary": summary, "description": description_text})
+        results.append({"key": key, "summary": summary, "description": description_text, "status": status, "assignee_name": assignee_name, "assignee_mail": assignee_email})
 
     return json.dumps(results)
 
