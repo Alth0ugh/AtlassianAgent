@@ -38,7 +38,7 @@ async def main(args):
 
     kernel.add_service(chat_service)
     async with MCPSsePlugin("JiraPlugin", 
-                            args.mcp_address, 
+                            f"{args.mcp_address}/sse", 
                             headers={
                                 "Authorization": f"Basic {convert_credentials(args.mail, args.token)}"
                                 }) as mcp_plugin:
