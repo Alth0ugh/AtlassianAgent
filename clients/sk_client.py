@@ -13,6 +13,7 @@ parser.add_argument("--ollama-address", type=str, help="Address and port for Oll
 parser.add_argument("--mcp-address", type=str, help="Address and port of MCP server.", required=True)
 parser.add_argument("--mail", type=str, help="User email", required=True)
 parser.add_argument("--token", type=str, help="Atlassian ID token", required=True)
+parser.add_argument("--model-id", type=str, help="Ollama model ID", required=True)
 
 def convert_credentials(mail: str, token: str) -> str:
     """
@@ -33,7 +34,7 @@ def convert_credentials(mail: str, token: str) -> str:
 async def main(args):
     kernel = sk.Kernel()
 
-    chat_service = OllamaChatCompletion("ollama", host=args.ollama_address, ai_model_id="mistral")
+    chat_service = OllamaChatCompletion("ollama", host=args.ollama_address, ai_model_id=args.model_id)
 
     kernel.add_service(chat_service)
     async with MCPSsePlugin("JiraPlugin", 
