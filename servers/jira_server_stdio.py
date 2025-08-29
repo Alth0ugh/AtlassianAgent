@@ -6,6 +6,7 @@ from jira_create_request import CreateRequest
 from server_response import Response
 import json
 from dataclasses import asdict
+from typing import Optional
 
 parser = ArgumentParser()
 parser.add_argument("--host", type=str, help="IP address of the server", default="0.0.0.0")
@@ -20,17 +21,45 @@ mcp = FastMCP(
 )
 
 def convert_credentials(mail: str, token: str) -> str:
+    """
+    Converts credentials into base64.
+    
+    Parameters:
+        mail (str): User email.
+        token (str): Atlassian ID token.
+
+    Returns:
+        str: Base64 encoded mail and token.
+    """
     credentials = f"{mail}:{token}"
     string_bytes = credentials.encode("utf-8")
     base64_bytes = base64.b64encode(string_bytes)
     return base64_bytes.decode("utf-8")
 
-def get_headers(credentials: str) -> dict:
-        return {"Authorization": f"Basic {credentials}",
+def get_headers(credentials: str) -> dict[str, str]:
+    """
+    Creates dictionary with HTTP headers.
+
+    Parameters:
+        credentials (str): Base64 encoded user credentials.
+
+    Returns:
+        Dict: dictionary containing HTTP headers.
+    """
+    return {"Authorization": f"Basic {credentials}",
         "Accept": "application/json",
         "Content-Type": "application/json"}
 
-def get_user_id(mail: str) -> str | None:
+def get_user_id(mail: str) -> Optional[str]:
+    """
+    Queries Jira API for user ID by user email.
+
+    Parameters:
+        mail (str): User email.
+
+    Returns:
+        Optional[str]: User ID or None if the ID is not found.
+    """
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
     parameters = {
@@ -53,7 +82,19 @@ def get_user_id(mail: str) -> str | None:
 
           Returns:
           A response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.""")
-def create_ticket(summary: str, description: str, project: str, assignee: str | None) -> str:
+def create_ticket(summary: str, description: str, project: str, assignee: Optional[str]) -> str:
+    """
+    Creates Jira ticket.
+
+    Parameters:
+        summary (str): Ticket summary.
+        description (str): Description of the ticket.
+        project (str): Project where the ticket will be assigned.
+        assignee (Optional[str]): Assignee's email.
+
+    Returns:
+        str: JSON encoded Response object.
+    """
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
     assignee_id = None
@@ -94,6 +135,16 @@ def create_ticket(summary: str, description: str, project: str, assignee: str | 
           A response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.
           """)
 def assign_user_to_issue(mail: str, issue_key: str) -> str:
+    """
+    Assigns user to an issue.
+
+    Parameters:
+          mail (str): Email of the user.
+          issue_key (str): The key of the issue.
+
+    Returns:
+        str: JSON encoded Response object.
+    """
     user_id = get_user_id(mail)
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
@@ -118,6 +169,15 @@ def assign_user_to_issue(mail: str, issue_key: str) -> str:
           In case of error returns a response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.
           """)
 def get_available_transitions(issue_key: str) -> str:
+    """
+    Gets available transitions for an issue.
+
+    Parameters:
+        issue_key (str): Key of the issue.
+
+    Returns:
+        str: JSON containing available trasitions or serialized Response containing error.
+    """
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
 
@@ -144,6 +204,16 @@ def get_available_transitions(issue_key: str) -> str:
           A response object with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error message if an error occured.
           """)
 def transition_issue(issue_key: str, transition_id: str) -> str:
+    """
+    Updates the status of the issue.
+
+    Parameters:
+        issue_key (str): Key of the issue.
+        transition_id (str): The ID of available transition.
+
+    Returns:
+        str: JSON encoded Response object.
+    """
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
     body = {"transition": transition_id}
@@ -158,12 +228,21 @@ def transition_issue(issue_key: str, transition_id: str) -> str:
         return json.dumps(asdict(Response(True, "Issue does not exist.")))
     return json.dumps(asdict(Response(True, "Unexpected error occured.")))
 
-@mcp.tool(description="""Lists all tickets assigned to a project. This tools does not need any parameters. 
+@mcp.tool(description="""Lists all tickets assigned to the project. This tools does not need any parameters. 
           
           Returns:
           A list of issues with key, summary and description of each issue. 
           If error occurs, returns json with the following properties: is_error: boolean indicating whether an error occured, error_message: string containing error.""")
 def load_tickets_for_project(project_key: str) -> str:
+    """
+    Loads tickets assigned to the project.
+
+    Parameters:
+        project_key (str): Key of the project.
+
+    Returns:
+        str: JSON array with tickets or in case of an error encoded Response object.
+    """
     credentials = convert_credentials(args.mail, args.token)
     headers = get_headers(credentials)
 
