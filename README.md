@@ -1,6 +1,6 @@
 # Aim of the project
 
-The primary aim of this project is to develop an LLM-powered agent system alongside an MCP (Model Context Protocol) server that allows the agent to communicate with with Jira and Confluence APIs. By leveraging the reasoning and automation capabilities of large language models, the system is designed to:
+This project demonstrates how to connect LLM-powered [agents](https://www.anthropic.com/engineering/building-effective-agents) with [Jira]((https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/)) and [Confluence](https://developer.atlassian.com/cloud/confluence/rest/v2/intro/#about) using the [Model Context Protocol](https://modelcontextprotocol.io/docs/getting-started/intro). By combining reasoning and automation from large language models with Jira/Confluence APIs, the system can:
 
 * Automate and simplify common Jira workflows (e.g., creating, updating, and querying issues).
 
@@ -8,12 +8,8 @@ The primary aim of this project is to develop an LLM-powered agent system alongs
 
 * Allow users to control these platforms using natural language.
 
-Based on this article about [agents](https://www.anthropic.com/engineering/building-effective-agents), [MCP](https://modelcontextprotocol.io/docs/getting-started/intro) server, and using documented [Jira](https://developer.atlassian.com/cloud/jira/platform/rest/v3/intro/) and [Confluence](https://developer.atlassian.com/cloud/confluence/rest/v2/intro/#about) API.
-
 # Scope
 ## Servers
-In this work, two [MCP](https://modelcontextprotocol.io/docs/getting-started/intro) servers were implemented: [jira_server_stdio.py](servers/jira_server_stdio.py) and [confluence_server_stdio.py](servers/confluence_server_stdio.py). 
-
 [jira_server_stdio.py](servers/jira_server_stdio.py) implements tools for:
 * ticket creation
 * assigning user to a ticket
@@ -29,7 +25,7 @@ LLM agents can connect to these servers with STDIO method.
 One additional server [jira_server.py](servers/jira_server.py) has been implemented. This server contains only tools for ticket creation and listing of tickets. Agents can connect to this server using the SSE method.
 
 ## Agents
-One custom agent [sk_client.py](clients/sk_client.py) was implemented for this project. This agent was implemented using [Semantic Kernel](https://github.com/microsoft/semantic-kernel) and [Ollama](https://ollama.com/) for easy LLM integration. For testing purposes, [Mistral 7B Instruct](https://ollama.com/library/mistral:7b-instruct) was selected. This agent is used for connecting to [jira_server.py](servers/jira_server.py) server.
+One custom agent [sk_client.py](clients/sk_client.py) was implemented using [Semantic Kernel](https://github.com/microsoft/semantic-kernel) and [Ollama](https://ollama.com/) for easy LLM integration. For testing purposes, [Mistral 7B Instruct](https://ollama.com/library/mistral:7b-instruct) was selected. This agent is used for connecting to [jira_server.py](servers/jira_server.py) server.
 
 The other agent used for testing the [MCP](https://modelcontextprotocol.io/docs/getting-started/intro) servers was [Claude Desktop](https://claude.ai/download).
 
