@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from dataclasses import asdict
 import json
+import os
 from typing import Optional
 
 from mcp.server.fastmcp import Context, FastMCP
@@ -65,7 +66,7 @@ def create_ticket(ctx: Context,
             "query": f"{assignee}"
         }
         response = requests.get(
-            f"https://{args.space}.atlassian.net/rest/api/3/user/search",
+            f"https://{os.environ["space"]}.atlassian.net/rest/api/3/user/search",
             headers=headers,
             params=parameters
             )
@@ -77,7 +78,7 @@ def create_ticket(ctx: Context,
 
     request = CreateRequest(project, summary, description, assignee_id)
     response = requests.post(
-        f"https://{args.space}.atlassian.net/rest/api/3/issue",
+        f"https://{os.environ["space"]}.atlassian.net/rest/api/3/issue",
         data=request.to_json(),
         headers=headers
         )
@@ -138,7 +139,7 @@ def load_tickets_for_project(ctx: Context, project_key: str) -> str:
     }
 
     response = requests.get(
-        f"https://{args.space}.atlassian.net/rest/api/3/search/jql",
+        f"https://{os.environ["space"]}.atlassian.net/rest/api/3/search/jql",
         params=params,
         headers=headers
         )
@@ -212,13 +213,13 @@ if __name__ == "__main__":
         "--host",
         type=str,
         help="IP address of the server",
-        default="0.0.0.0"
+        default="127.0.0.1"
         )
     parser.add_argument(
         "--port",
         type=int,
         help="Port on which the server will be running.",
-        default=8050
+        default=8000
         )
     parser.add_argument(
         "--space",
@@ -227,9 +228,12 @@ if __name__ == "__main__":
         required=True
         )
     args = parser.parse_args()
+    os.environ["space"] = args.space
 
     mcp = FastMCP(
-        name="JiraServer"
+        name="JiraServer",
+        host=args.host,
+        port=args.port
     )
-
+    register_tools(mcp)
     mcp.run(transport="sse")
