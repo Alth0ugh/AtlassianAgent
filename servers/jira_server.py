@@ -9,31 +9,6 @@ import requests
 from jira_create_request import CreateRequest
 from server_response import Response
 
-parser = ArgumentParser()
-parser.add_argument(
-    "--host",
-    type=str,
-    help="IP address of the server",
-    default="0.0.0.0"
-    )
-parser.add_argument(
-    "--port",
-    type=int,
-    help="Port on which the server will be running.",
-    default=8050
-    )
-parser.add_argument(
-    "--space",
-    type=str,
-    help="Name of the Atlassian space.",
-    required=True
-    )
-args = parser.parse_args()
-
-mcp = FastMCP(
-    name="JiraServer"
-)
-
 
 def get_credentials(ctx: Context) -> Optional[str]:
     request_context = ctx.request_context
@@ -55,11 +30,6 @@ def get_headers(credentials: str) -> dict[str, str]:
             "Content-Type": "application/json"}
 
 
-@mcp.tool(description="""Creates a ticket in Jira.
-          Returns a response object with the following properties:
-          is_error: boolean indicating whether an error occured
-          error_message: string containing error message if an error occured.
-          """)
 def create_ticket(ctx: Context,
                   summary: str,
                   description: str,
@@ -142,13 +112,6 @@ def create_ticket(ctx: Context,
         )
 
 
-@mcp.tool(description="""Lists all tickets assigned to the current user.
-          This tools does not need any parameters.
-          Returns a list of issues with key,
-          summary and description of each issue.
-          If error occurs, returns json with the following properties:
-          is_error: boolean indicating whether an error occured
-          error_message: string containing error.""")
 def load_tickets_for_project(ctx: Context, project_key: str) -> str:
     """
     Loads tickets assigned to the project.
@@ -222,5 +185,51 @@ def load_tickets_for_project(ctx: Context, project_key: str) -> str:
     return json.dumps(results)
 
 
+def register_tools(mcp: FastMCP):
+    mcp.add_tool(
+        load_tickets_for_project,
+        description="""Lists all tickets assigned to the current user.
+          This tools does not need any parameters.
+          Returns a list of issues with key,
+          summary and description of each issue.
+          If error occurs, returns json with the following properties:
+          is_error: boolean indicating whether an error occured
+          error_message: string containing error."""
+        )
+    mcp.add_tool(
+        create_ticket,
+        description="""Creates a ticket in Jira.
+          Returns a response object with the following properties:
+          is_error: boolean indicating whether an error occured
+          error_message: string containing error message if an error occured.
+          """
+    )
+
+
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--host",
+        type=str,
+        help="IP address of the server",
+        default="0.0.0.0"
+        )
+    parser.add_argument(
+        "--port",
+        type=int,
+        help="Port on which the server will be running.",
+        default=8050
+        )
+    parser.add_argument(
+        "--space",
+        type=str,
+        help="Name of the Atlassian space.",
+        required=True
+        )
+    args = parser.parse_args()
+
+    mcp = FastMCP(
+        name="JiraServer"
+    )
+
     mcp.run(transport="sse")

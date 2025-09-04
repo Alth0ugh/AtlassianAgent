@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from dataclasses import asdict
+import os
 from typing import Optional
 import json
 
@@ -13,28 +14,6 @@ from server_functions import (
 )
 from server_response import Response
 
-parser = ArgumentParser()
-parser.add_argument(
-    "--space",
-    type=str,
-    help="Name of the Atlassian space.",
-    required=True)
-parser.add_argument(
-    "--mail",
-    type=str,
-    help="User email.",
-    required=True)
-parser.add_argument(
-    "--token",
-    type=str,
-    help="User Atlassian ID token.",
-    required=True)
-args = parser.parse_args()
-
-mcp = FastMCP(
-    name="JiraServer"
-)
-
 
 def get_user_id(mail: str) -> Optional[str]:
     """
@@ -46,13 +25,13 @@ def get_user_id(mail: str) -> Optional[str]:
     Returns:
         Optional[str]: User ID or None if the ID is not found.
     """
-    credentials = convert_credentials(args.mail, args.token)
+    credentials = convert_credentials(os.environ["mail"], os.environ["token"])
     headers = get_headers(credentials)
     parameters = {
         "query": f"{mail}"
     }
     response = requests.get(
-        f"https://{args.space}.atlassian.net/rest/api/3/user/search",
+        f"https://{os.environ["space"]}.atlassian.net/rest/api/3/user/search",
         headers=headers,
         params=parameters
         )
@@ -64,17 +43,6 @@ def get_user_id(mail: str) -> Optional[str]:
     return None
 
 
-@mcp.tool(description="""Creates a ticket in Jira.
-          Parameters:
-          summary: summary of the ticket
-          description: description of the ticket
-          project: project where ticket is assigned
-          assignee: (Optional) assignee for the ticket. Provide user email.
-
-          Returns:
-          A response object with the following properties:
-          is_error: boolean indicating whether an error occured
-          error_message: string containing error message""")
 def create_ticket(summary: str,
                   description: str,
                   project: str,
@@ -91,7 +59,7 @@ def create_ticket(summary: str,
     Returns:
         str: JSON encoded Response object.
     """
-    credentials = convert_credentials(args.mail, args.token)
+    credentials = convert_credentials(os.environ["mail"], os.environ["token"])
     headers = get_headers(credentials)
     assignee_id = None
 
@@ -100,7 +68,8 @@ def create_ticket(summary: str,
             "query": f"{assignee}"
         }
         response = requests.get(
-            f"https://{args.space}.atlassian.net/rest/api/3/user/search",
+            f"https://{os.environ["space"]}.atlassian.net" +
+            "/rest/api/3/user/search",
             headers=headers,
             params=parameters
             )
@@ -111,7 +80,7 @@ def create_ticket(summary: str,
 
     request = CreateRequest(project, summary, description, assignee_id)
     response = requests.post(
-        f"https://{args.space}.atlassian.net/rest/api/3/issue",
+        f"https://{os.environ["space"]}.atlassian.net/rest/api/3/issue",
         data=request.to_json(),
         headers=headers
         )
@@ -146,17 +115,6 @@ def create_ticket(summary: str,
         )
 
 
-@mcp.tool(description="""Assigns user to an issue.
-
-          Parameters:
-          mail: email of the user
-          issue_key: the key of the issue
-
-          Returns:
-          A response object with the following properties:
-          is_error: boolean indicating whether an error occured
-          error_message: string containing error message if an error occured.
-          """)
 def assign_user_to_issue(mail: str, issue_key: str) -> str:
     """
     Assigns user to an issue.
@@ -169,12 +127,12 @@ def assign_user_to_issue(mail: str, issue_key: str) -> str:
         str: JSON encoded Response object.
     """
     user_id = get_user_id(mail)
-    credentials = convert_credentials(args.mail, args.token)
+    credentials = convert_credentials(os.environ["mail"], os.environ["token"])
     headers = get_headers(credentials)
     body = {"accountId": user_id}
 
     response = requests.put(
-        f"https://{args.space}.atlassian.net/" +
+        f"https://{os.environ["space"]}.atlassian.net/" +
         f"rest/api/3/issue/{issue_key}/assignee",
         headers=headers,
         data=json.dumps(body)
@@ -190,17 +148,6 @@ def assign_user_to_issue(mail: str, issue_key: str) -> str:
     return json.dumps(asdict(Response(True, "Unexpected error occured")))
 
 
-@mcp.tool(description="""Gets all available status transitions for Jira issue.
-
-          Parameters:
-          issue_key: key of the issue
-
-          Returns:
-          A list of transition names and IDs.
-          In case of error returns a Response object with properties:
-          is_error: boolean indicating whether an error occured
-          error_message: string containing error message.
-          """)
 def get_available_transitions(issue_key: str) -> str:
     """
     Gets available transitions for an issue.
@@ -211,11 +158,11 @@ def get_available_transitions(issue_key: str) -> str:
     Returns:
         str: JSON list with available trasitions or Response if error occurs.
     """
-    credentials = convert_credentials(args.mail, args.token)
+    credentials = convert_credentials(os.environ["mail"], os.environ["token"])
     headers = get_headers(credentials)
 
     response = requests.get(
-        f"https://{args.space}.atlassian.net/" +
+        f"https://{os.environ["space"]}.atlassian.net/" +
         f"rest/api/3/issue/{issue_key}/transitions",
         headers=headers
         )
@@ -237,17 +184,6 @@ def get_available_transitions(issue_key: str) -> str:
     return json.dumps(transitions_list)
 
 
-@mcp.tool(description="""Transitions Jira issue from one state to another.
-
-          Parameters:
-          issue_key: key of the issue
-          transition_id: ID of the transition to be applied
-
-          Returns:
-          A response object with the following properties:
-          is_error: boolean indicating whether an error occured
-          error_message: string containing error message if an error occured.
-          """)
 def transition_issue(issue_key: str, transition_id: str) -> str:
     """
     Updates the status of the issue.
@@ -259,12 +195,12 @@ def transition_issue(issue_key: str, transition_id: str) -> str:
     Returns:
         str: JSON encoded Response object.
     """
-    credentials = convert_credentials(args.mail, args.token)
+    credentials = convert_credentials(os.environ["mail"], os.environ["token"])
     headers = get_headers(credentials)
     body = {"transition": transition_id}
 
     response = requests.post(
-        f"https://{args.space}.atlassian.net/" +
+        f"https://{os.environ["space"]}.atlassian.net/" +
         f"rest/api/3/issue/{issue_key}/transitions",
         headers=headers,
         data=json.dumps(body)
@@ -285,14 +221,6 @@ def transition_issue(issue_key: str, transition_id: str) -> str:
         )
 
 
-@mcp.tool(description="""Lists all tickets assigned to the project.
-          This tools does not need any parameters.
-
-          Returns:
-          A list of issues with key, summary and description of each issue.
-          If error occurs, returns json with the following properties:
-          is_error: boolean indicating whether an error occured
-          error_message: string containing error.""")
 def load_tickets_for_project(project_key: str) -> str:
     """
     Loads tickets assigned to the project.
@@ -303,7 +231,7 @@ def load_tickets_for_project(project_key: str) -> str:
     Returns:
         str: JSON array with tickets or Response in case of error.
     """
-    credentials = convert_credentials(args.mail, args.token)
+    credentials = convert_credentials(os.environ["mail"], os.environ["token"])
     headers = get_headers(credentials)
 
     params = {
@@ -312,7 +240,7 @@ def load_tickets_for_project(project_key: str) -> str:
     }
 
     response = requests.get(
-        f"https://{args.space}.atlassian.net/rest/api/3/search/jql",
+        f"https://{os.environ["space"]}.atlassian.net/rest/api/3/search/jql",
         params=params,
         headers=headers
         )
@@ -356,5 +284,101 @@ def load_tickets_for_project(project_key: str) -> str:
     return json.dumps(results)
 
 
+def register_tools(mcp: FastMCP):
+    mcp.add_tool(
+        load_tickets_for_project,
+        description="""Lists all tickets assigned to the project.
+          This tools does not need any parameters.
+
+          Returns:
+          A list of issues with key, summary and description of each issue.
+          If error occurs, returns json with the following properties:
+          is_error: boolean indicating whether an error occured
+          error_message: string containing error."""
+          )
+    mcp.add_tool(
+        transition_issue,
+        description="""Transitions Jira issue from one state to another.
+
+          Parameters:
+          issue_key: key of the issue
+          transition_id: ID of the transition to be applied
+
+          Returns:
+          A response object with the following properties:
+          is_error: boolean indicating whether an error occured
+          error_message: string containing error message if an error occured.
+          """
+          )
+    mcp.add_tool(
+        get_available_transitions,
+        description="""Gets all available status transitions for Jira issue.
+
+          Parameters:
+          issue_key: key of the issue
+
+          Returns:
+          A list of transition names and IDs.
+          In case of error returns a Response object with properties:
+          is_error: boolean indicating whether an error occured
+          error_message: string containing error message.
+          """
+        )
+    mcp.add_tool(
+        assign_user_to_issue,
+        description="""Assigns user to an issue.
+
+          Parameters:
+          mail: email of the user
+          issue_key: the key of the issue
+
+          Returns:
+          A response object with the following properties:
+          is_error: boolean indicating whether an error occured
+          error_message: string containing error message if an error occured.
+          """
+    )
+    mcp.add_tool(
+        create_ticket,
+        description="""Creates a ticket in Jira.
+          Parameters:
+          summary: summary of the ticket
+          description: description of the ticket
+          project: project where ticket is assigned
+          assignee: (Optional) assignee for the ticket. Provide user email.
+
+          Returns:
+          A response object with the following properties:
+          is_error: boolean indicating whether an error occured
+          error_message: string containing error message"""
+    )
+
+
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--space",
+        type=str,
+        help="Name of the Atlassian space.",
+        required=True)
+    parser.add_argument(
+        "--mail",
+        type=str,
+        help="User email.",
+        required=True)
+    parser.add_argument(
+        "--token",
+        type=str,
+        help="User Atlassian ID token.",
+        required=True)
+    args = parser.parse_args()
+    os.environ["space"] = args.space
+    os.environ["mail"] = args.mail
+    os.environ["token"] = args.token
+
+    mcp = FastMCP(
+
+        name="JiraServer"
+    )
+    register_tools(mcp)
     mcp.run(transport="stdio")

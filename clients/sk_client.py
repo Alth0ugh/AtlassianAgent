@@ -12,28 +12,6 @@ from semantic_kernel.connectors.ai.ollama import (
 from semantic_kernel.connectors.mcp import MCPSsePlugin
 from semantic_kernel.contents.chat_history import ChatHistory
 
-parser = ArgumentParser()
-parser.add_argument("--ollama-address",
-                    type=str,
-                    help="Address and port for Ollama server.",
-                    required=True)
-parser.add_argument("--mcp-address",
-                    type=str,
-                    help="Address and port of MCP server.",
-                    required=True)
-parser.add_argument("--mail",
-                    type=str,
-                    help="User email",
-                    required=True)
-parser.add_argument("--token",
-                    type=str,
-                    help="Atlassian ID token",
-                    required=True)
-parser.add_argument("--model-id",
-                    type=str,
-                    help="Ollama model ID",
-                    required=True)
-
 
 def convert_credentials(mail: str, token: str) -> str:
     """
@@ -108,5 +86,26 @@ async def main(args):
 
 
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("--ollama-address",
+                        type=str,
+                        help="Address and port for Ollama server.",
+                        required=True)
+    parser.add_argument("--mcp-address",
+                        type=str,
+                        help="Address and port of MCP server.",
+                        required=True)
+    parser.add_argument("--mail",
+                        type=str,
+                        help="User email",
+                        required=True)
+    parser.add_argument("--token",
+                        type=str,
+                        help="Atlassian ID token",
+                        required=True)
+    parser.add_argument("--model-id",
+                        type=str,
+                        help="Ollama model ID",
+                        required=True)
     args = parser.parse_args()
     asyncio.run(main(args))
