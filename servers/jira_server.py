@@ -66,7 +66,8 @@ def create_ticket(ctx: Context,
             "query": f"{assignee}"
         }
         response = requests.get(
-            f"https://{os.environ["space"]}.atlassian.net/rest/api/3/user/search",
+            f"https://{os.environ["space"]}.atlassian.net" +
+            "/rest/api/3/user/search",
             headers=headers,
             params=parameters
             )
